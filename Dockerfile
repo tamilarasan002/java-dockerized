@@ -7,7 +7,6 @@ WORKDIR /app/java_project/
 # Copy the JAR file
 COPY target/dockerized-0.0.1-SNAPSHOT.jar ./
 
-# Copy dependencies
 COPY target/dependency-jars/* ./dependency-jars/
 
 # Copy input data
