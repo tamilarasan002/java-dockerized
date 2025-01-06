@@ -1,0 +1,59 @@
+# This config was automatically generated from your source code
+# Stacks detected: cicd:github-actions:.github/workflows,deps:java:.,deps:ruby:docker-tests
+version: 2.1
+orbs:
+  ruby: circleci/ruby@2.0.1
+jobs:
+  test-java:
+    docker:
+      - image: cimg/openjdk:17.0
+    steps:
+      - checkout
+      - run:
+          name: Calculate cache key
+          command: |-
+            find . -name 'pom.xml' -o -name 'gradlew*' -o -name '*.gradle*' | \
+                    sort | xargs cat > /tmp/CIRCLECI_CACHE_KEY
+      - restore_cache:
+          key: cache-{{ checksum "/tmp/CIRCLECI_CACHE_KEY" }}
+      - run:
+          command: mvn verify
+      - store_test_results:
+          path: target/surefire-reports
+      - save_cache:
+          key: cache-{{ checksum "/tmp/CIRCLECI_CACHE_KEY" }}
+          paths:
+            - ~/.m2/repository
+  test-ruby:
+    # Install gems, run rake tests
+    docker:
+      - image: cimg/ruby:3.2-node
+    working_directory: ~/project/docker-tests
+    steps:
+      - checkout:
+          path: ~/project
+      - ruby/install-deps
+      - run:
+          name: rake test
+          command: bundle exec rake test
+  deploy:
+    # This is an example deploy job, not actually used by the workflow
+    docker:
+      - image: cimg/base:stable
+    steps:
+      # Replace this with steps to deploy to users
+      - run:
+          name: deploy
+          command: '#e.g. ./deploy.sh'
+      - run:
+          name: found github actions config
+          command: ':'
+workflows:
+  build-and-test:
+    jobs:
+      - test-java
+      - test-ruby
+    # - deploy:
+    #     requires:
+    #       - test-java
+    #       - test-ruby
